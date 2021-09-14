@@ -1,8 +1,8 @@
 */Debug/
-*/.vscode/
+/.vscode/*
 */.vs/
 */.sln/
 */.vcxproj/
 */.vcxproj.filters/
 */.vcxproj.user/
-*/.cppN/
+/ADS/*.cppN
