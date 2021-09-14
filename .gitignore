@@ -5,4 +5,4 @@
 */.vcxproj/
 */.vcxproj.filters/
 */.vcxproj.user/
-/ADS/*.cppN
+/ADS/**.*.cppN
