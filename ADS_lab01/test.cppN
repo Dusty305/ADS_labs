@@ -1,0 +1,31 @@
+
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+void tess(int i)
+{
+    try
+    {
+        int x[4] = {3,3,3,3};
+        i < 4 ? x[i] = 7 : throw "num bigger than x len";
+    }
+    catch(const char *e)
+    {
+        cerr << "caught exception: "<< e << '\n';
+        tess()
+    }
+    
+    
+}
+
+int main()
+{
+    int i;
+    cin >> i;
+
+    tess(i);
+    cout << "reload" << '\n';
+    
+}

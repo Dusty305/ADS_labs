@@ -22,9 +22,6 @@ int main()
     test(generated_test1, "Test with generated values num.1");
     test(generated_test2, "Test with generated values num.2");
 
-    for (int i = 0; i < 10; i++)
-        test(generated_test1, "Test with generated values num.1");
-
     return 0;
 }
 
@@ -36,7 +33,7 @@ void print_array(string message, int arr[], const int len)
     cout << endl;
 }
 
-// Проверка присутствие элемента val в множестве set
+
 bool in_set(const int val, const int len, int set[])
 {
     for (int i = 0; i < len; i++)
@@ -45,7 +42,7 @@ bool in_set(const int val, const int len, int set[])
     return false;
 }
 
-// Пересечение двух множеств set1 и set2
+
 void setIntersection(
     const int len1, int set1[],
     const int len2, int set2[],
@@ -57,7 +54,7 @@ void setIntersection(
             set_res[size++] = set1[i];
 }
 
-// Объединение двух множеств set1 и set_res
+
 void setUnion(
     const int len1, int set1[],
     int set_res[], int& size
@@ -68,9 +65,7 @@ void setUnion(
             set_res[size++] = set1[i];
 }
 
-// Множества А и В имеют общие элементы 1 и 9
-// Множество C имеет элемент 9, который входит в множество AB
-// Множество C имеет элемент 11, который входит в множество AB+С
+
 void const_test1()
 {
     const int alen = 5, blen = 6, clen = 4, dlen = 9, elen = alen + blen + clen + dlen;
@@ -94,7 +89,7 @@ void const_test1()
     print_array("Set E: ", E, size);
 }
 
-// Множества A и B не имеют общих элементов
+
 void const_test2()
 {
     const int alen = 3, blen = 8, clen = 5, dlen = 1, elen = alen + blen + clen + dlen;
@@ -117,11 +112,7 @@ void const_test2()
     print_array("Set E: ", E, size);
 }
 
-// Элементы множества генерируются случайно за исключением:
-// - Первые 2 элемента множества совпадают с 2 элементами множества А
-// - Последний элемент множества С совпадает со случайным элементом множества А
-// - Два элемента множества D совпадают с элементами множества C
-// Универсум - целые неотрицательные числа от 0 до 999
+
 void generated_test1()
 {
     const int arrlen = 8;
@@ -152,7 +143,7 @@ void generated_test1()
     print_array("Set E: ", E, size);
 }
 
-// Элементы каждого множества генерируются случайно
+
 void generated_test2()
 {
     const int arrlen = 10;
