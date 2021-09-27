@@ -79,7 +79,7 @@ Array operator&(Array& arr1, Array& arr2)
 
 ostream& operator<<(ostream& os, Array& arr)
 {
-    for (auto it = arr.begin(); it != arr.end() && *it != '\0'; it++)
+    for (auto it = arr.cbegin(); it != arr.cend() && *it != '\0'; it++)
         os << *it << " ";
     return os;
 }
@@ -88,9 +88,9 @@ List operator|=(List& result, List& list2)
 {
     bool in_set;
 
-    for (auto it1 = list2.begin(); it1 != list2.end() and *it1 != '\0'; it1++) {
+    for (auto it1 = list2.cbegin(); it1 != list2.cend() and *it1 != '\0'; it1++) {
         in_set = false;
-        for (auto it2 = result.begin(); it2 != result.end(); it2++)
+        for (auto it2 = result.cbegin(); it2 != result.cend(); it2++)
             if (*it1 == *it2)
             {
                 in_set = true;
@@ -107,8 +107,8 @@ List operator|=(List& result, List& list2)
 List operator&(List& list1, List& list2)
 {
     List result;
-    for (auto it1 = list1.begin(); *it1; it1++)
-        for (auto it2 = list2.begin(); *it2; it2++)
+    for (auto it1 = list1.cbegin(); *it1; it1++)
+        for (auto it2 = list2.cbegin(); *it2; it2++)
             if (*it1 == *it2)
                 result.push_back(*it1);
     return result;
@@ -216,19 +216,19 @@ Set SetTest(Set set1, Set set2, Set set3, Set set4, const int repeat = 1)
 void test(Array A, Array B, Array C, Array D)
 {
     cout << "\nArray test\n";
-    Array array_result = SetTest<Array>(Array(A), Array(B), Array(C), Array(D), 100);
+    Array array_result = SetTest<Array>(Array(A), Array(B), Array(C), Array(D), 10000);
     cout << "Array result: " << array_result << "\n";
 
     cout << "\nList test\n";
-    List list_result = SetTest<List>(List(A.begin(), A.end()), List(B.begin(), B.end()), List(C.begin(), C.end()), List(D.begin(), D.end()), 100);
+    List list_result = SetTest<List>(List(A.cbegin(), A.cend()), List(B.cbegin(), B.cend()), List(C.cbegin(), C.cend()), List(D.cbegin(), D.cend()), 10000);
     cout << "List result: " << list_result << "\n";
 
     cout << "\nMachine word test\n";
-    WordSet word_result = SetTest<WordSet>(WordSet(A), WordSet(B), WordSet(C), WordSet(D), 100);
+    WordSet word_result = SetTest<WordSet>(WordSet(A), WordSet(B), WordSet(C), WordSet(D), 10000);
     cout << "Machine word result: " << word_result << "\n";
 
     cout << "\nBit array test\n";
-    BitSet bit_result = SetTest<BitSet>(BitSet(A), BitSet(B), BitSet(C), BitSet(D), 100);
+    BitSet bit_result = SetTest<BitSet>(BitSet(A), BitSet(B), BitSet(C), BitSet(D), 10000);
     cout << "Bit array result: " << bit_result << "\n";
 }
 
