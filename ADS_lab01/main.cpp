@@ -1,180 +1,278 @@
 #include <iostream>
 #include <string>
+#include <array>
+#include <list>
+#include <chrono>
+#include <charconv>
 using namespace std;
+using namespace chrono;
 
-void const_test1();
-void const_test2();
-void generated_test1();
-void generated_test2();
+const int UnSize = 10;
+using Array = array<char, UnSize + 1>;
+using List = list<char>;
 
-void test(void (*function)(), string text)
+class Timer
 {
-    cout << text << endl;
-    function();
-    cout << "Press ENTER to continue program execution." << endl;
-    getchar();
+private:
+    time_point<steady_clock> start, end;
+    duration<float> duration;
+public:
+
+    Timer()
+    {
+        start = high_resolution_clock::now();
+    }
+
+    ~Timer()
+    {
+        end = high_resolution_clock::now();
+        duration = end - start;
+        float ms = duration.count() * 1000.0f;
+        cout << "Duration: " << ms << "ms\n";
+    }
+};
+
+Array operator|=(Array& result, Array& arr2)
+{
+    int k = 0;
+    bool in_result;
+
+    while (result[k])
+        k++;
+
+    for (int i = 0; arr2[i]; i++) {
+        in_result = false;
+        for (int j = 0; result[j]; j++)
+            if (arr2[i] == result[j])
+            {
+                in_result = true;
+                break;
+            }
+        if (!in_result)
+            result[k++] = arr2[i];
+    }
+
+    return result;
+}
+
+Array operator|(Array& arr1, Array& arr2)
+{
+    Array result = { '\0' };
+    int k = 0;
+    result |= arr1;
+    result |= arr2;
+    return result;
+}
+
+Array operator&(Array& arr1, Array& arr2)
+{
+    Array result = { '\0' };
+    int k = 0;
+
+    for (int i = 0; arr1[i]; i++)
+        for (int j = 0; arr2[j]; j++)
+            if (arr1[i] == arr2[j])
+                result[k++] = arr1[i];
+
+    return result;
+}
+
+ostream& operator<<(ostream& os, Array& arr)
+{
+    for (auto it = arr.begin(); it != arr.end() && *it != '\0'; it++)
+        os << *it << " ";
+    return os;
+}
+
+List operator|=(List& result, List& list2)
+{
+    bool in_set;
+
+    for (auto it1 = list2.begin(); it1 != list2.end() and *it1 != '\0'; it1++) {
+        in_set = false;
+        for (auto it2 = result.begin(); it2 != result.end(); it2++)
+            if (*it1 == *it2)
+            {
+                in_set = true;
+                break;
+            }
+        if (!in_set)
+            result.push_back(*it1);
+        
+    }
+
+    return result;
+}
+
+List operator&(List& list1, List& list2)
+{
+    List result;
+    for (auto it1 = list1.begin(); *it1; it1++)
+        for (auto it2 = list2.begin(); *it2; it2++)
+            if (*it1 == *it2)
+                result.push_back(*it1);
+    return result;
+}
+
+ostream& operator<<(ostream& os, List l)
+{
+    for (char c : l)
+        os << c << " ";
+    return os;
+}
+
+class WordSet
+{
+private:
+    int word;
+
+public:
+
+    WordSet()
+    { }
+
+    WordSet(Array arr)
+    { 
+        word = 0;
+        for (int i = 0; arr[i]; i++)
+            word |= (1 << (arr[i] - '0'));
+    }
+
+    WordSet operator|=(WordSet& set)
+    {
+        word = word | set.word;
+        return *this;
+    }
+
+    WordSet operator&(WordSet& set)
+    {
+        WordSet result;
+        result.word = word & set.word;
+        return result;
+    }
+
+    friend ostream& operator<<(ostream& os, WordSet& set)
+    {
+        for (int i = 9; i >= 0; i--) {
+            os << ((set.word >> i) & 1);
+        }
+            
+        return os;
+    }
+};
+
+class BitSet
+{
+private:
+    int bits[UnSize] = { 0 };
+
+public:
+
+    BitSet()
+    { }
+
+    BitSet(Array arr)
+    {
+        for(int i = 0; arr[i]; i++)
+            bits[arr[i] - '0'] = 1;
+    }
+
+    BitSet operator|=(BitSet& set)
+    {
+        for (int i = 0; i < UnSize; i++)
+            bits[i] = bits[i] || set.bits[i];
+        return *this;
+    }
+
+    BitSet operator&(BitSet& set)
+    {
+        BitSet result;
+        for (int i = 0; i < UnSize; i++)
+            result.bits[i] = bits[i] && set.bits[i];
+        return result;
+    }
+
+    friend ostream& operator<<(ostream& os, BitSet& set)
+    {
+        for (int i = 9; i >= 0; i--)
+            os << set.bits[i];
+        return os;
+    }
+};
+
+template<class Set>
+Set SetTest(Set set1, Set set2, Set set3, Set set4, const int repeat = 1)
+{
+    Timer timer;
+    Set set_result;
+    for (int i = 0; i < repeat; i++) {
+        set_result = set1 & set2;
+        set_result |= set3;
+        set_result |= set4;
+    }
+    return set_result;
+}
+
+void test(Array A, Array B, Array C, Array D)
+{
+    cout << "\nArray test\n";
+    Array array_result = SetTest<Array>(Array(A), Array(B), Array(C), Array(D), 100);
+    cout << "Array result: " << array_result << "\n";
+
+    cout << "\nList test\n";
+    List list_result = SetTest<List>(List(A.begin(), A.end()), List(B.begin(), B.end()), List(C.begin(), C.end()), List(D.begin(), D.end()), 100);
+    cout << "List result: " << list_result << "\n";
+
+    cout << "\nMachine word test\n";
+    WordSet word_result = SetTest<WordSet>(WordSet(A), WordSet(B), WordSet(C), WordSet(D), 100);
+    cout << "Machine word result: " << word_result << "\n";
+
+    cout << "\nBit array test\n";
+    BitSet bit_result = SetTest<BitSet>(BitSet(A), BitSet(B), BitSet(C), BitSet(D), 100);
+    cout << "Bit array result: " << bit_result << "\n";
+}
+
+void constant_test()
+{
+    cout << "Constant test. E = AB + C + D\n";
+    Array A = { "01569" },
+          B = { "024578" },
+          C = { "69" },
+          D = { "348" };
+    cout << "Array A: " << A << "\n"
+         << "Array B: " << B << "\n"
+         << "Array C: " << C << "\n"
+         << "Array D: " << D << "\n";
+
+    test(A, B, C, D);
+}
+
+void generated_test()
+{
+    cout << "Generated test\n";
+    srand(time(NULL));
+    Array A = { '\0' }, B = { '\0' }, C = { '\0' }, D = { '\0' };
+
+    to_chars(A.data(), A.data() + A.size(), rand());
+    to_chars(B.data(), B.data() + B.size(), rand());
+    to_chars(C.data(), C.data() + C.size(), rand());
+    to_chars(D.data(), D.data() + D.size(), rand());
+
+    A = A | A; B = B | B; C = C | C; D = D | D;
+
+    cout << "Array A: " << A << "\n"
+         << "Array B: " << B << "\n"
+         << "Array C: " << C << "\n"
+         << "Array D: " << D << "\n";
+
+    test(A, B, C, D);
 }
 
 int main()
 {
-    test(const_test1, "Test with constant values num.1");
-    test(const_test2, "Test with constant values num.2");
-    test(generated_test1, "Test with generated values num.1");
-    test(generated_test2, "Test with generated values num.2");
-
-    for (int i = 0; i < 10; i++)
-        test(generated_test1, "Test with generated values num.1");
-
+    constant_test();
+    cout << "\n-------------------------------------------\n";
+    generated_test();
+    
     return 0;
-}
-
-void print_array(string message, int arr[], const int len)
-{
-    cout << message;
-    for (int i = 0; i < len; i++)
-        cout << arr[i] << " ";
-    cout << endl;
-}
-
-// Проверка присутствие элемента val в множестве set
-bool in_set(const int val, const int len, int set[])
-{
-    for (int i = 0; i < len; i++)
-        if (val == set[i])
-            return true;
-    return false;
-}
-
-// Пересечение двух множеств set1 и set2
-void setIntersection(
-    const int len1, int set1[],
-    const int len2, int set2[],
-    int set_res[], int& size
-)
-{
-    for (int i = 0; i < len1; i++)
-        if (in_set(set1[i], len2, set2))
-            set_res[size++] = set1[i];
-}
-
-// Объединение двух множеств set1 и set_res
-void setUnion(
-    const int len1, int set1[],
-    int set_res[], int& size
-)
-{
-    for (int i = 0; i < len1; i++)
-        if (!in_set(set1[i], size, set_res))
-            set_res[size++] = set1[i];
-}
-
-// Множества А и В имеют общие элементы 1 и 9
-// Множество C имеет элемент 9, который входит в множество AB
-// Множество C имеет элемент 11, который входит в множество AB+С
-void const_test1()
-{
-    const int alen = 5, blen = 6, clen = 4, dlen = 9, elen = alen + blen + clen + dlen;
-    int A[alen] = { 1, 7, 634, 82, 9 };
-    int B[blen] = { 5, 9, 1, 43, 12, 21 };
-    int C[clen] = { 9, 9000, -523, 11 };
-    int D[dlen] = { 99, 88, 77, 66, 55, 44, 33, 22, 11 };
-    int E[elen];
-    int size = 0;
-
-    print_array("Set A: ", A, alen);
-    print_array("Set B: ", B, blen);
-    print_array("Set C: ", C, clen);
-    print_array("Set D: ", D, dlen);
-
-    setIntersection(alen, A, blen, B, E, size);
-    setUnion(clen, C, E, size);
-    setUnion(dlen, D, E, size);
-
-
-    print_array("Set E: ", E, size);
-}
-
-// Множества A и B не имеют общих элементов
-void const_test2()
-{
-    const int alen = 3, blen = 8, clen = 5, dlen = 1, elen = alen + blen + clen + dlen;
-    int A[alen] = { -53, 43, 888 };
-    int B[blen] = { 5, 6, 1, -11, 12, -21, 776, 9 };
-    int C[clen] = { -50345, 51, -523, 3 };
-    int D[dlen] = { -1 };
-    int E[elen];
-    int size = 0;
-
-    print_array("Set A: ", A, alen);
-    print_array("Set B: ", B, blen);
-    print_array("Set C: ", C, clen);
-    print_array("Set D: ", D, dlen);
-
-    setIntersection(alen, A, blen, B, E, size);
-    setUnion(clen, C, E, size);
-    setUnion(dlen, D, E, size);
-
-    print_array("Set E: ", E, size);
-}
-
-// Элементы множества генерируются случайно за исключением:
-// - Первые 2 элемента множества совпадают с 2 элементами множества А
-// - Последний элемент множества С совпадает со случайным элементом множества А
-// - Два элемента множества D совпадают с элементами множества C
-// Универсум - целые неотрицательные числа от 0 до 999
-void generated_test1()
-{
-    const int arrlen = 8;
-    int A[arrlen];
-    int B[arrlen];
-    int C[arrlen];
-    int D[arrlen];
-    int E[arrlen * 4];
-    int size = 0;
-
-    srand(time(NULL));
-    for (int i = 0; i < arrlen; i++) {
-        A[i] = rand() % 1000;
-        B[i] = i <= 1 ? A[i] : rand() % 1000;
-        C[i] = i == 7 ? A[rand() % i] : rand() % 1000;
-        D[i] = i >= 5 and i <= 6 ? C[i] : rand() % 1000;
-    }
-
-    print_array("Set A: ", A, arrlen);
-    print_array("Set B: ", B, arrlen);
-    print_array("Set C: ", C, arrlen);
-    print_array("Set D: ", D, arrlen);
-
-    setIntersection(arrlen, A, arrlen, B, E, size);
-    setUnion(arrlen, C, E, size);
-    setUnion(arrlen, D, E, size);
-
-    print_array("Set E: ", E, size);
-}
-
-// Элементы каждого множества генерируются случайно
-void generated_test2()
-{
-    const int arrlen = 10;
-    int A[arrlen];
-    int B[arrlen];
-    int C[arrlen];
-    int D[arrlen];
-    int E[arrlen * 4];
-    int size = 0;
-
-    srand(time(NULL));
-    for (int i = 0; i < arrlen; i++)
-        A[i] = rand(), B[i] = rand(), C[i] = rand(), D[i] = rand();
-
-    print_array("Set A: ", A, arrlen);
-    print_array("Set B: ", B, arrlen);
-    print_array("Set C: ", C, arrlen);
-    print_array("Set D: ", D, arrlen);
-
-    setIntersection(arrlen, A, arrlen, B, E, size);
-    setUnion(arrlen, C, E, size);
-    setUnion(arrlen, D, E, size);
-
-    print_array("Set E: ", E, size);
 }
