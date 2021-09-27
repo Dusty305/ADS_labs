@@ -121,6 +121,7 @@ ostream& operator<<(ostream& os, List l)
     return os;
 }
 
+
 class WordSet
 {
 private:
