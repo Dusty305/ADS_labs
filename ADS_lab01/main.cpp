@@ -32,7 +32,7 @@ public:
     }
 };
 
-Array operator|=(Array& result, Array& arr2)
+void operator|=(Array& result, Array& arr2)
 {
     int k = 0;
     bool in_result;
@@ -51,8 +51,6 @@ Array operator|=(Array& result, Array& arr2)
         if (!in_result)
             result[k++] = arr2[i];
     }
-
-    return result;
 }
 
 Array operator|(Array& arr1, Array& arr2)
@@ -61,7 +59,7 @@ Array operator|(Array& arr1, Array& arr2)
     int k = 0;
     result |= arr1;
     result |= arr2;
-    return result;
+    return move(result);
 }
 
 Array operator&(Array& arr1, Array& arr2)
@@ -74,7 +72,7 @@ Array operator&(Array& arr1, Array& arr2)
             if (arr1[i] == arr2[j])
                 result[k++] = arr1[i];
 
-    return result;
+    return move(result);
 }
 
 ostream& operator<<(ostream& os, Array& arr)
@@ -84,7 +82,7 @@ ostream& operator<<(ostream& os, Array& arr)
     return os;
 }
 
-List operator|=(List& result, List& list2)
+void operator|=(List& result, List& list2)
 {
     bool in_set;
 
@@ -98,10 +96,7 @@ List operator|=(List& result, List& list2)
             }
         if (!in_set)
             result.push_back(*it1);
-        
     }
-
-    return result;
 }
 
 List operator&(List& list1, List& list2)
@@ -111,7 +106,7 @@ List operator&(List& list1, List& list2)
         for (auto it2 = list2.cbegin(); *it2; it2++)
             if (*it1 == *it2)
                 result.push_back(*it1);
-    return result;
+    return move(result);
 }
 
 ostream& operator<<(ostream& os, List l)
@@ -139,17 +134,16 @@ public:
             word |= (1 << (arr[i] - '0'));
     }
 
-    WordSet operator|=(WordSet& set)
+    void operator|=(WordSet& set)
     {
         word = word | set.word;
-        return *this;
     }
 
     WordSet operator&(WordSet& set)
     {
         WordSet result;
         result.word = word & set.word;
-        return result;
+        return move(result);
     }
 
     friend ostream& operator<<(ostream& os, WordSet& set)
@@ -178,11 +172,10 @@ public:
             bits[arr[i] - '0'] = 1;
     }
 
-    BitSet operator|=(BitSet& set)
+    void operator|=(BitSet& set)
     {
         for (int i = 0; i < UnSize; i++)
             bits[i] = bits[i] || set.bits[i];
-        return *this;
     }
 
     BitSet operator&(BitSet& set)
@@ -190,7 +183,7 @@ public:
         BitSet result;
         for (int i = 0; i < UnSize; i++)
             result.bits[i] = bits[i] && set.bits[i];
-        return result;
+        return move(result);
     }
 
     friend ostream& operator<<(ostream& os, BitSet& set)
@@ -217,20 +210,20 @@ Set SetTest(Set set1, Set set2, Set set3, Set set4, const int repeat = 1)
 void test(Array A, Array B, Array C, Array D)
 {
     cout << "\nArray test\n";
-    Array array_result = SetTest<Array>(Array(A), Array(B), Array(C), Array(D), 10000);
+    Array array_result = SetTest<Array>(Array(A), Array(B), Array(C), Array(D), 1000000);
     cout << "Array result: " << array_result << "\n";
 
     cout << "\nList test\n";
-    List list_result = SetTest<List>(List(A.cbegin(), A.cend()), List(B.cbegin(), B.cend()), List(C.cbegin(), C.cend()), List(D.cbegin(), D.cend()), 10000);
+    List list_result = SetTest<List>(List(A.cbegin(), A.cend()), List(B.cbegin(), B.cend()), List(C.cbegin(), C.cend()), List(D.cbegin(), D.cend()), 1000000);
     cout << "List result: " << list_result << "\n";
 
     cout << "\nMachine word test\n";
-    WordSet word_result = SetTest<WordSet>(WordSet(A), WordSet(B), WordSet(C), WordSet(D), 10000);
-    cout << "Machine word result: " << word_result << "\n";
+    WordSet word_result = SetTest<WordSet>(WordSet(A), WordSet(B), WordSet(C), WordSet(D), 1000000);
+    cout << "Machine word result: " << word_result << " (from 9 to 0)\n";
 
     cout << "\nBit array test\n";
-    BitSet bit_result = SetTest<BitSet>(BitSet(A), BitSet(B), BitSet(C), BitSet(D), 10000);
-    cout << "Bit array result: " << bit_result << "\n";
+    BitSet bit_result = SetTest<BitSet>(BitSet(A), BitSet(B), BitSet(C), BitSet(D), 1000000);
+    cout << "Bit array result: " << bit_result << " (from 9 to 0)\n";
 }
 
 void constant_test()
