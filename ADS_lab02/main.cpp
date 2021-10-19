@@ -3,16 +3,18 @@
 #include <array>
 #include <list>
 #include <chrono>
-#include <charconv>
+#include <cstdio>
 
 const int UnSize = 10; //size for all sets
+using namespace std;
+using namespace chrono;
 
 #include "wordset.h"
 #include "bitset.h"
 #include "arrayset.h"
 #include "listset.h"
 
-/*class Timer
+class Timer
 {
 private:
     time_point<steady_clock> start, end;
@@ -31,12 +33,12 @@ public:
         float ms = duration.count() * 1000.0f;
         cout << "Duration: " << ms << "ms\n";
     }
-};*/
+};
 
 template <class Set>
 Set SetTest(Set set1, Set set2, Set set3, Set set4, const int repeat = 1)
 {
-    //Timer timer;
+    Timer timer;
     Set set_result;
     for (int i = 0; i < repeat; i++)
     {
@@ -69,14 +71,14 @@ void test(char A[], char B[], char C[], char D[])
 void constant_test()
 {
     cout << "Constant test. E = AB + C + D\n";
-    char A[] = {"01569"},
-         B[] = {"024578"},
-         C[] = {"69"},
-         D[] = {"348"};
+    char A[] = { "01569" },
+        B[] = { "024578" },
+        C[] = { "69" },
+        D[] = { "348" };
     cout << "Array A: " << A << "\n"
-         << "Array B: " << B << "\n"
-         << "Array C: " << C << "\n"
-         << "Array D: " << D << "\n";
+        << "Array B: " << B << "\n"
+        << "Array C: " << C << "\n"
+        << "Array D: " << D << "\n";
 
     test(A, B, C, D);
 }
@@ -85,22 +87,17 @@ void generated_test()
 {
     cout << "Generated test\n";
     srand(time(NULL));
-    char A[UnSize + 1] = {'\0'}, B[UnSize + 1] = {'\0'}, C[UnSize + 1] = {'\0'}, D[UnSize + 1] = {'\0'};
+    char A[UnSize + 1] = { '\0' }, B[UnSize + 1] = { '\0' }, C[UnSize + 1] = { '\0' }, D[UnSize + 1] = { '\0' };
 
-    to_chars(A.data(), A.data() + A.size(), rand());
-    to_chars(B.data(), B.data() + B.size(), rand());
-    to_chars(C.data(), C.data() + C.size(), rand());
-    to_chars(D.data(), D.data() + D.size(), rand());
-
-    A = A | A;
-    B = B | B;
-    C = C | C;
-    D = D | D;
+    sprintf_s(A, "%d", rand());
+    sprintf_s(B, "%d", rand());
+    sprintf_s(C, "%d", rand());
+    sprintf_s(D, "%d", rand());
 
     cout << "Array A: " << A << "\n"
-         << "Array B: " << B << "\n"
-         << "Array C: " << C << "\n"
-         << "Array D: " << D << "\n";
+        << "Array B: " << B << "\n"
+        << "Array C: " << C << "\n"
+        << "Array D: " << D << "\n";
 
     test(A, B, C, D);
 }

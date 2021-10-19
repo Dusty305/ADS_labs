@@ -12,12 +12,11 @@ private:
 
 public:
 
-    WordSet()
+    WordSet() : word(0)
     { }
 
-    WordSet(char arr[])
-    { 
-        word = 0;
+    WordSet(char arr[]) : word(0)
+    {
         for (int i = 0; arr[i]; i++)
             word |= (1 << (arr[i] - '0'));
     }

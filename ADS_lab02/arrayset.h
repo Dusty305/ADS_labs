@@ -8,8 +8,19 @@ using namespace std;
 class ArraySet
 {
 private:
-    char array[UnSize+1];
+    char array[UnSize + 1] = { '\0' };
 public:
+
+    ArraySet()
+    { }
+
+    ArraySet(char arr[])
+    {
+        int k = 0;
+        while (arr[k])
+            array[k++] = arr[k];
+        array[k] = '\0';
+    }
 
     const char& operator[](size_t i)const
     {
@@ -21,25 +32,19 @@ public:
         return array[i];
     }
 
-    ArraySet& operator|=(const ArraySet& arr2)
+    ArraySet& operator|=(const ArraySet& set)
     {
-        int k = 0;
-        bool in_result;
-        ArraySet result(*this);
-
-        while (result[k])
-            k++;
-
-        for (int i = 0; arr2[i]; i++) {
-            in_result = false;
-            for (int j = 0; result[j]; j++)
-                if (arr2[i] == result[j])
+        for (int i = 0; set[i]; i++) {
+            bool in_result = false;
+            int k = 0;
+            for (k = 0; (*this)[k]; k++)
+                if (set[i] == (*this)[k])
                 {
                     in_result = true;
                     break;
                 }
             if (!in_result)
-                result[k++] = arr2[i];
+                (*this)[k++] = set[i];
         }
         return *this;
     }

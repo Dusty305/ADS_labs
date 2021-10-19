@@ -6,76 +6,53 @@
 using namespace std;
 
 
+
 class ListSet
 {
 
 private:
-    struct List
+    struct ListNode
     {
         char field;
-        struct List *next;
-    }node;
+        ListNode* next;
 
-    List *create_node(char C)
-    {
-        List *NewNode=NULL;
-
-        List *NewNode = new List;
-        if(NewNode)
-        {
-            NewNode->field = C;
-            NewNode->next=NULL;
-        }
-        return NewNode;
-    }
-
-    void insert_after(List *my_node,List *current_node)
-    {
-        if(my_node&&current_node)
-        {
-            if(current_node->next==NULL)
-            {
-                current_node->next=my_node;
-            }
-            else
-            {
-                my_node->next=current_node->next;
-                current_node->next=my_node;
-            }
-        }
-    }
-
+        ListNode(char c) : field(c), next(nullptr)
+        { }
+    } *begin, *end;
     
 public:
 
-    ListSet(char arr[])
+    ListSet() : begin(nullptr), end(nullptr)
+    { }
+
+    ListSet(char arr[]) : begin(nullptr), end(nullptr)
     { 
-        List *newnode, *q;
-        for (int i = 0; arr[i]; i++)
-            newnode = create_node()
-            if(i)
-            {
-                insert_after(newnode,q);
-            }
-            q = newnode;
+        ListNode *newnode, *q;
+        for (int i = 0; arr[i]; i++) 
+            push_back(new ListNode(arr[i]));
+        
     }
 
-    ListSet& operator|=(const ListSet& list2)
+    void push_back(ListNode* node)
     {
-        ListSet result(*this);
+        if (!end)
+            begin = end = node;
+        else
+            end = end->next = node;
+    }
 
-        bool in_set;
-
-        for (List it1 = list2.node; it1; it1 = it1.next) {
-            in_set = false;
-            for (List it2 = result.node; it2; it2 = it2.next)
-                if (*it1 == *it2)
+    ListSet& operator|=(const ListSet& list)
+    {
+        for (ListNode* node1 = list.begin; node1; node1 = node1->next) {
+            bool in_set = false;
+            for (ListNode* node2 = this->begin; node2; node2 = node2->next)
+                if (node1->field == node2->field)
                 {
                     in_set = true;
                     break;
                 }
-            if (!in_set)
-                result.insert_after(*it2,*it1);
+                if (!in_set)
+                    this->push_back(new ListNode(node1->field));
         }
 
         return *this;
@@ -86,17 +63,18 @@ public:
         ListSet result;
         ListSet list2(*this);
 
-        for (auto it1 = list1.cbegin(); *it1; it1++)
-            for (auto it2 = list2.cbegin(); *it2; it2++)
-                if (*it1 == *it2)
-                    result.push_back(*it1);
+        for (ListNode* node1 = list1.begin; node1; node1 = node1->next)
+            for (ListNode* node2 = list2.begin; node2; node2 = node2->next)
+                if (node1->field == node2->field)
+                    result.push_back(new ListNode(node1->field));
+
         return move(result);
     }
 
-    friend ostream& operator<<(ostream& os, ListSet l)
+    friend ostream& operator<<(ostream& os, ListSet list)
     {
-        for (char c : l)
-            os << c << " ";
+        for (ListNode* node = list.begin; node; node = node->next)
+            os << node->field << " ";
         return os;
     }
 
