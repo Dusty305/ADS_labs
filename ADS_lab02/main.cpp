@@ -18,22 +18,23 @@ class Timer
 {
 private:
     time_point<steady_clock> start, end;
-    duration<float> duration;
+    duration<float> durations;
 public:
 
     Timer()
     {
-        start = high_resolution_clock::now();
+        start = steady_clock::now();
     }
 
     ~Timer()
     {
-        end = high_resolution_clock::now();
-        duration = end - start;
-        float ms = duration.count() * 1000.0f;
+        auto end = steady_clock::now();
+        durations = end - start;
+        float ms = durations.count() * 1000.0f;
         cout << "Duration: " << ms << "ms\n";
     }
 };
+
 
 template <class Set>
 Set SetTest(Set set1, Set set2, Set set3, Set set4, const int repeat = 1)
@@ -89,10 +90,10 @@ void generated_test()
     srand(time(NULL));
     char A[UnSize + 1] = { '\0' }, B[UnSize + 1] = { '\0' }, C[UnSize + 1] = { '\0' }, D[UnSize + 1] = { '\0' };
 
-    sprintf_s(A, "%d", rand());
-    sprintf_s(B, "%d", rand());
-    sprintf_s(C, "%d", rand());
-    sprintf_s(D, "%d", rand());
+    sprintf(A, "%d", rand());
+    sprintf(B, "%d", rand());
+    sprintf(C, "%d", rand());
+    sprintf(D, "%d", rand());
 
     cout << "Array A: " << A << "\n"
         << "Array B: " << B << "\n"
