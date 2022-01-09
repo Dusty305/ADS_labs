@@ -15,106 +15,71 @@ class Graph
 {
 private:
     typedef int VertexId;
-    vector<vector<bool>> matrix;
+    vector<vector<bool>> matrix; // triangle adjecency matrix 
+    int power; // number of vertecies
 public:
 
     Graph(size_t size = 0) 
     { 
-        matrix = vector<vector<bool>>(size, vector<bool>(size, false));
+        matrix = vector<vector<bool>>(size);
+        for (int i = 0; i < size; ++i)
+            matrix[i] = vector<bool>(size - i, false);
+        power = size;
         srand(time(0)); 
     }
 
-    //Graph(vector<Vertex> vec) : matrix(vec) { srand(time(0)); }
-
-    Graph(const vector<vector<bool>>& adjMatrix)
+    Graph(const vector<vector<bool>>& adjMatrix) : Graph(adjMatrix.size())
     {
-        Graph(adjMatrix.size());
-        for (int i = 0; i < adjMatrix.size(); ++i)
-            for (int j = i + 1; j < adjMatrix.size(); ++j)
+        for (int i = 0; i < power; ++i)
+            for (int j = i + 1; j < power; ++j)
                 if (adjMatrix[i][j])
                     AddEdge(i, j);
     }
 
-    // ---------------------------------
-    // Vertex related methods
-    // ---------------------------------
-
-    //const vector<Vertex>& GetVerteceis() const { return matrix; }
-
-    const int GetVerteciesNumber() const { return matrix.size(); }
-
-    // TODO: Сделать inline?
-    inline bool IsValidVertexId(VertexId id) const
+    pair<VertexId, VertexId> GetValidEdgeId(VertexId start, VertexId finish) const
     {
-        return 0 <= id && id < matrix.size();
+        if (start > finish)
+            swap(start, finish);
+        return make_pair(start, finish - start);
     }
-
-    //// TODO: Нужна ли проверка на правильность id?
-    //Vertex& GetVertex(VertexId id)
-    //{
-    //    if (IsValidVertexId(id))
-    //        return matrix[id];
-    //    else
-    //        throw "Invalid vertex id!";
-    //}
-
-    //// TODO: У гетера должен быть такой тип?
-    //const Vertex& GetVertex(VertexId id) const
-    //{
-    //    if (IsValidVertexId(id))
-    //        return matrix[id];
-    //    else
-    //        throw "Invalid vertex id!";
-    //}
-
-    // ---------------------------------
-    // Edge related methods
-    // ---------------------------------
-
-    bool HasEdge(const VertexId start, const VertexId finish) const
+    void AddEdge(VertexId start, VertexId finish) 
     {
-        if (!IsValidVertexId(start) or !IsValidVertexId(finish))
-            throw "Invalid vertex id";
-        return matrix[start][finish];
-    }
-
-    // TODO: Исправить на VertexId?
-    void AddEdge(const VertexId start, const VertexId finish)
-    {
-        matrix[start][finish] = true;
-        matrix[finish][start] = true;
+        pair<VertexId, VertexId> edge = GetValidEdgeId(start, finish);
+        matrix[edge.first][edge.second] = true;
     }
 
     void DeleteEdge(VertexId start, VertexId finish)
     {
-        matrix[start][finish] = false;
-        matrix[finish][start] = false;
+        pair<VertexId, VertexId> edge = GetValidEdgeId(start, finish);
+        matrix[edge.first][edge.second] = false;
     }
 
-    // ---------------------------------
-    // Graph related methods
-    // ---------------------------------
+    const bool GetEdge(VertexId start, VertexId finish) const
+    {
+        pair<VertexId, VertexId> edge = GetValidEdgeId(start, finish);
+        return matrix[edge.first][edge.second];
+    }
 
     void PrintAdjacencyMatrix() const 
     {
-        for (vector<bool> row : matrix)
+        for (int i = 0; i < power; ++i)
         {
-            for (bool b : row)
-                cout << b << " ";
+            for (int j = 0; j < power; ++j)
+                cout << GetEdge(i, j) << " ";
             cout << "\n";
         }
     }
 
     void GenerateGraph()
     {
-        const int n = matrix.size();
-        const int edges_number = rand() % (n * (n - 1) / 2) + 1;
+        const int n = power;
+        const int edges_number = rand() % (power * (power - 1) / 2) + 1;
 
         for (int k = 0; k < edges_number; ++k)
         {
-            VertexId i = rand() % n,
-                     j = rand() % n;
-            if (i != j and !HasEdge(i, j))
+            VertexId i = rand() % power,
+                     j = rand() % power;
+            if (i != j and !GetEdge(i, j))
                 AddEdge(i, j);
             else
                 --k;
@@ -123,17 +88,13 @@ public:
 
     Graph GenerateSpanningTree(const Graph& graph);
     void PrintBipartiteComponents(const int n);
-    bool isBipartite() const;
+    bool IsBipartite() const;
 };
 
-// returns graph with missing edges
-// rval return?
 Graph Graph::GenerateSpanningTree(const Graph& graph) {
-    const int nOfV = graph.matrix.size();
-
     stack<VertexId> dfs_stack;
-    vector<bool> used(nOfV, false);
-    Graph result_graph(nOfV);
+    vector<bool> used(power, false);
+    Graph result_graph(power); // contains edges not included in "*this" graph 
 
     dfs_stack.push(0);
     used[0] = true;
@@ -141,9 +102,9 @@ Graph Graph::GenerateSpanningTree(const Graph& graph) {
     {
         VertexId id = dfs_stack.top(); dfs_stack.pop();
         
-        for (int i = 0; i < graph.matrix[id].size(); ++i)
+        for (int i = 0; i < power; ++i)
         {
-            if(graph.matrix[id][i])
+            if(graph.GetEdge(id, i))
                 if (!used[i])
                 {
                     AddEdge(id, i);
@@ -153,8 +114,10 @@ Graph Graph::GenerateSpanningTree(const Graph& graph) {
                 else
                     result_graph.AddEdge(id, i);
         }
-        // (Оптимизировать)
-        // Если компонент связности несколько, то ищем следующую компоненту для добавления ребер
+
+        // Will work only if there is a number of 
+        // connectivity components 
+        // --------------------------------------------------------------
         if (dfs_stack.empty())
             for (int i = 0; i < used.size(); ++i)
                 if (!used[i])
@@ -165,47 +128,49 @@ Graph Graph::GenerateSpanningTree(const Graph& graph) {
                 }
     }
 
-    //cout << "Spanning tree\n";
-    //PrintAdjacencyMatrix();
     return result_graph;
 }
 
 void Graph::PrintBipartiteComponents(const int n = 1) 
 {
-    if (isBipartite()) 
+    if (IsBipartite())
     {
         cout << "Bipartite component #" << n << "\n";
         PrintAdjacencyMatrix();
         cout << "\n";
         return;
     }
-    //cout << "Graph\n";
-    //PrintAdjacencyMatrix();
-    //Строим остовное дерево
-    Graph graph(matrix.size());
-    Graph new_graph(matrix.size());
-    new_graph = graph.GenerateSpanningTree(*this);
-    //Добавляем по очереди не вошедшие ребра
-    for(int i = 0; i < matrix.size(); ++i)
-        for(int j = 0; j < matrix.size(); ++j)
+
+    // Second component includes edges that will not be included 
+    // in the first component
+    // --------------------------------------------------------------
+    Graph first_comp(power);
+    Graph second_comp(power); 
+    second_comp = first_comp.GenerateSpanningTree(*this);
+
+    // Going through all edges that might be moved from
+    // the second component to the first one 
+    // --------------------------------------------------------------
+    for(VertexId i = 0; i < power; ++i)
+        for(VertexId j = 0; j < power; ++j)
         {
-            if (!new_graph.matrix[i][j])
+            if (!second_comp.GetEdge(i, j))
                 continue;
-            graph.AddEdge(i, j);
-            if (!graph.isBipartite())
-                graph.DeleteEdge(i, j);
+            first_comp.AddEdge(i, j);
+            if (first_comp.IsBipartite())
+                second_comp.DeleteEdge(i, j);
             else
-                new_graph.DeleteEdge(i, j);
+                first_comp.DeleteEdge(i, j);
         }
+
     cout << "Bipartite component #" << n << "\n";
-    graph.PrintAdjacencyMatrix();
-    cout << "------------------------------------------\n";
-    new_graph.PrintBipartiteComponents(n + 1);
+    first_comp.PrintAdjacencyMatrix();
+    second_comp.PrintBipartiteComponents(n + 1);
 }
 
-bool Graph::isBipartite() const 
+bool Graph::IsBipartite() const
 {
-    vector<int> color(matrix.size(), -1);
+    vector<int> color(power, -1);
     stack<int> dfs_stack;
 
     dfs_stack.push(0);
@@ -213,19 +178,22 @@ bool Graph::isBipartite() const
     while (!dfs_stack.empty())
     {
         VertexId id = dfs_stack.top(); dfs_stack.pop();
-        for (int i = 0; i < matrix.size(); ++i)
+        for (VertexId i = 0; i < power; ++i)
         {
-            if(matrix[id][i])
-                if (color[i] == -1)
-                {
-                    dfs_stack.push(i);
-                    color[i] = !color[id];
-                }
-                else if (color[i] == color[id])
-                    return false;
+            if (!GetEdge(id, i))
+                continue;
+            if (color[i] == -1)
+            {
+                dfs_stack.push(i);
+                color[i] = !color[id];
+            }
+            else if (color[i] == color[id])
+                return false;
         }
-        // (Оптимизировать)
-        // Если компонент связности несколько, то ищем следующую компоненту для добавления ребер
+
+        // Will work only if there is a number of 
+        // connectivity components 
+        // --------------------------------------------------------------
         if (dfs_stack.empty())
             for (int i = 0; i < color.size(); ++i)
                 if (color[i] == -1)
