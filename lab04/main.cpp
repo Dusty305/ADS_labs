@@ -16,8 +16,9 @@ int main() {
     //Graph graph(matrix);
     Graph graph(8);
     graph.GenerateGraph();
-    //graph.PrintAdjacencyMatrix();
-    graph.PrintBipartiteComponents(1);
+    cout << "Graph's adjecency matrix\n";
+    graph.PrintAdjacencyMatrix();
+    graph.PrintBipartiteComponents();
 
     return 0;
 }

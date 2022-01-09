@@ -24,16 +24,6 @@ struct Vertex
 {
     vector<Edge> edges;
     Vertex(int size = 0) { edges.reserve(size); }
-    bool DeleteEdge(VertexId start, VertexId finish)
-    {
-        auto edge_it = find_if(edges.begin(), edges.end(), [&](const Edge& edge)
-            { return edge.finish == finish; }
-        );
-        if (edge_it == edges.end())
-            return false;    
-        edges.erase(edge_it);
-        return true;
-    }
 };
 
 class Graph 
@@ -41,13 +31,13 @@ class Graph
 private:
     // TODO: точно ли эффективно хранить в виде вектора вершин с ребрами?
     vector<Vertex> vertecies;
-
 public:
 
     Graph(size_t size = 0) 
     { 
         vertecies = vector<Vertex>(size, Vertex(size - 1));
-        srand(time(0)); }
+        srand(time(0)); 
+    }
 
     Graph(vector<Vertex> vec) : vertecies(vec) { srand(time(0)); }
 
@@ -112,19 +102,6 @@ public:
         vertecies[finish].edges.push_back(Edge(finish, start));
     }
 
-    // TODO: зачем bool? есть ли получше способы удаления?
-    bool DeleteEdge(VertexId i, VertexId j) 
-    {
-        cout << "--------\n";
-        if (!IsValidVertexId(i) or !IsValidVertexId(j))
-            return false;
-
-        if(!vertecies[i].DeleteEdge(i, j))
-            return false;
-        vertecies[j].DeleteEdge(j, i);
-        return true;
-    }
-
     void DeleteLastEdge(VertexId id1)
     {
         const VertexId id2 = vertecies[id1].edges.back().finish;
@@ -167,7 +144,7 @@ public:
     }   
 
     vector<Edge> GenerateSpanningTree(const Graph& graph);
-    void PrintBipartiteComponents(const int n = 1);
+    void PrintBipartiteComponents(const int n);
     bool isBipartite() const;
 };
 
@@ -209,12 +186,12 @@ vector<Edge> Graph::GenerateSpanningTree(const Graph& graph) {
                 }
     }
 
-    cout << "Spanning tree\n";
-    PrintAdjacencyMatrix();
+    //cout << "Spanning tree\n";
+    //PrintAdjacencyMatrix();
     return missingEdges;
 }
 
-void Graph::PrintBipartiteComponents(const int n) 
+void Graph::PrintBipartiteComponents(const int n = 1) 
 {
     if (isBipartite()) 
     {
@@ -223,9 +200,9 @@ void Graph::PrintBipartiteComponents(const int n)
         cout << "\n";
         return;
     }
-    cout << "Graph\n";
-    PrintAdjacencyMatrix();
-    cout << "\n";
+    //cout << "Graph\n";
+    //PrintAdjacencyMatrix();
+    //cout << "\n";
     //Строим остовное дерево
     Graph graph(vertecies.size());
     Graph new_graph(vertecies.size());
