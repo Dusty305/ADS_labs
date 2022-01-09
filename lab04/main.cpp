@@ -5,11 +5,19 @@
 
 
 int main() {
+    //vector<vector<bool>> matrix
+    //{
+    //    {0, 1, 1, 1, 1},
+    //    {1, 0, 1, 1, 1},
+    //    {1, 1, 0, 1, 0},
+    //    {1, 1, 1, 0, 0},
+    //    {1, 1, 0, 0, 0}
+    //};
+    //Graph graph(matrix);
     Graph graph;
-
-    graph.GenerateGraph(20);
+    graph.GenerateGraph(8);
     graph.PrintAdjacencyMatrix();
-    cout << "Graph is " << (graph.isBipartite() ? "bipartite\n" : "not bipartite\n");
+    graph.PrintBipartiteComponents(1);
 
     return 0;
 }
