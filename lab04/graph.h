@@ -125,9 +125,11 @@ public:
         return true;
     }
 
-    void DeleteLastEdge(VertexId id)
+    void DeleteLastEdge(VertexId id1)
     {
-        vertecies[id].edges.pop_back();
+        const VertexId id2 = vertecies[id1].edges.back().finish;
+        vertecies[id1].edges.pop_back();
+        vertecies[id2].edges.pop_back();
     }
 
     // ---------------------------------
@@ -169,8 +171,6 @@ public:
     bool isBipartite() const;
 };
 
-
-// Возвращает недобавленные ребра
 vector<Edge> Graph::GenerateSpanningTree(const Graph& graph) {
     const int nOfV = graph.GetVerteciesNumber();
 
@@ -209,16 +209,23 @@ vector<Edge> Graph::GenerateSpanningTree(const Graph& graph) {
                 }
     }
 
+    cout << "Spanning tree\n";
+    PrintAdjacencyMatrix();
     return missingEdges;
 }
 
-void Graph::PrintBipartiteComponents(const int n) {
-    if (isBipartite()) {
+void Graph::PrintBipartiteComponents(const int n) 
+{
+    if (isBipartite()) 
+    {
         cout << "Bipartite component #" << n << "\n";
         PrintAdjacencyMatrix();
         cout << "\n";
         return;
     }
+    cout << "Graph\n";
+    PrintAdjacencyMatrix();
+    cout << "\n";
     //Строим остовное дерево
     Graph graph(vertecies.size());
     Graph new_graph(vertecies.size());
@@ -237,7 +244,7 @@ void Graph::PrintBipartiteComponents(const int n) {
     }
     cout << "Bipartite component #" << n << "\n";
     graph.PrintAdjacencyMatrix();
-
+    cout << "------------------------------------------\n";
     new_graph.PrintBipartiteComponents(n + 1);
 }
 
