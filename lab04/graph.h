@@ -10,40 +10,25 @@
 
 using namespace std;
 
-typedef int VertexId;
-
-struct Edge
-{
-    VertexId start;
-    VertexId finish;
-    Edge(int strt = -1, int fnsh = -1) : start(strt), finish(fnsh) { }
-    inline bool operator==(const Edge& edge) { return start == edge.start && finish == edge.finish; }
-};
-
-struct Vertex 
-{
-    vector<Edge> edges;
-    Vertex(int size = 0) { edges.reserve(size); }
-};
 
 class Graph 
 {
 private:
-    // TODO: точно ли эффективно хранить в виде вектора вершин с ребрами?
-    vector<Vertex> vertecies;
+    typedef int VertexId;
+    vector<vector<bool>> matrix;
 public:
 
     Graph(size_t size = 0) 
     { 
-        vertecies = vector<Vertex>(size, Vertex(size - 1));
+        matrix = vector<vector<bool>>(size, vector<bool>(size, false));
         srand(time(0)); 
     }
 
-    Graph(vector<Vertex> vec) : vertecies(vec) { srand(time(0)); }
+    //Graph(vector<Vertex> vec) : matrix(vec) { srand(time(0)); }
 
     Graph(const vector<vector<bool>>& adjMatrix)
     {
-        vertecies = vector<Vertex>(adjMatrix.size(), Vertex(adjMatrix.size() - 1));
+        Graph(adjMatrix.size());
         for (int i = 0; i < adjMatrix.size(); ++i)
             for (int j = i + 1; j < adjMatrix.size(); ++j)
                 if (adjMatrix[i][j])
@@ -54,33 +39,33 @@ public:
     // Vertex related methods
     // ---------------------------------
 
-    const vector<Vertex>& GetVerteceis() const { return vertecies; }
+    //const vector<Vertex>& GetVerteceis() const { return matrix; }
 
-    const int GetVerteciesNumber() const { return vertecies.size(); }
+    const int GetVerteciesNumber() const { return matrix.size(); }
 
     // TODO: Сделать inline?
     inline bool IsValidVertexId(VertexId id) const
     {
-        return 0 <= id && id < vertecies.size();
+        return 0 <= id && id < matrix.size();
     }
 
-    // TODO: Нужна ли проверка на правильность id?
-    Vertex& GetVertex(VertexId id)
-    {
-        if (IsValidVertexId(id))
-            return vertecies[id];
-        else
-            throw "Invalid vertex id!";
-    }
+    //// TODO: Нужна ли проверка на правильность id?
+    //Vertex& GetVertex(VertexId id)
+    //{
+    //    if (IsValidVertexId(id))
+    //        return matrix[id];
+    //    else
+    //        throw "Invalid vertex id!";
+    //}
 
-    // TODO: У гетера должен быть такой тип?
-    const Vertex& GetVertex(VertexId id) const
-    {
-        if (IsValidVertexId(id))
-            return vertecies[id];
-        else
-            throw "Invalid vertex id!";
-    }
+    //// TODO: У гетера должен быть такой тип?
+    //const Vertex& GetVertex(VertexId id) const
+    //{
+    //    if (IsValidVertexId(id))
+    //        return matrix[id];
+    //    else
+    //        throw "Invalid vertex id!";
+    //}
 
     // ---------------------------------
     // Edge related methods
@@ -90,23 +75,20 @@ public:
     {
         if (!IsValidVertexId(start) or !IsValidVertexId(finish))
             throw "Invalid vertex id";
-        return find_if(vertecies[start].edges.begin(), vertecies[start].edges.end(), 
-            [&](const Edge& edge) { return finish == edge.finish; }) 
-            != vertecies[start].edges.end();
+        return matrix[start][finish];
     }
 
     // TODO: Исправить на VertexId?
     void AddEdge(const VertexId start, const VertexId finish)
     {
-        vertecies[start].edges.push_back(Edge(start, finish));
-        vertecies[finish].edges.push_back(Edge(finish, start));
+        matrix[start][finish] = true;
+        matrix[finish][start] = true;
     }
 
-    void DeleteLastEdge(VertexId id1)
+    void DeleteEdge(VertexId start, VertexId finish)
     {
-        const VertexId id2 = vertecies[id1].edges.back().finish;
-        vertecies[id1].edges.pop_back();
-        vertecies[id2].edges.pop_back();
+        matrix[start][finish] = false;
+        matrix[finish][start] = false;
     }
 
     // ---------------------------------
@@ -115,10 +97,6 @@ public:
 
     void PrintAdjacencyMatrix() const 
     {
-        vector<vector<bool>> matrix = vector<vector<bool>>(vertecies.size(), vector<bool>(vertecies.size(), false));
-        for (Vertex v : vertecies)
-            for (Edge e : v.edges)
-                matrix[e.start][e.finish] = true;
         for (vector<bool> row : matrix)
         {
             for (bool b : row)
@@ -129,7 +107,7 @@ public:
 
     void GenerateGraph()
     {
-        const int n = vertecies.size();
+        const int n = matrix.size();
         const int edges_number = rand() % (n * (n - 1) / 2) + 1;
 
         for (int k = 0; k < edges_number; ++k)
@@ -143,36 +121,37 @@ public:
         }
     }   
 
-    vector<Edge> GenerateSpanningTree(const Graph& graph);
+    Graph GenerateSpanningTree(const Graph& graph);
     void PrintBipartiteComponents(const int n);
     bool isBipartite() const;
 };
 
-vector<Edge> Graph::GenerateSpanningTree(const Graph& graph) {
-    const int nOfV = graph.GetVerteciesNumber();
+// returns graph with missing edges
+// rval return?
+Graph Graph::GenerateSpanningTree(const Graph& graph) {
+    const int nOfV = graph.matrix.size();
 
     stack<VertexId> dfs_stack;
     vector<bool> used(nOfV, false);
-    vector<Edge> missingEdges;
-    missingEdges.reserve(nOfV * (nOfV - 1) / 2);
+    Graph result_graph(nOfV);
 
     dfs_stack.push(0);
     used[0] = true;
     while (!dfs_stack.empty())
     {
         VertexId id = dfs_stack.top(); dfs_stack.pop();
-        const Vertex& v = graph.GetVertex(id);
-
-        for (Edge e : v.edges)
+        
+        for (int i = 0; i < graph.matrix[id].size(); ++i)
         {
-            if (!used[e.finish])
-            {
-                AddEdge(e.start, e.finish);
-                dfs_stack.push(e.finish);
-                used[e.finish] = true;
-            }
-            else if (!HasEdge(e.finish, e.start) and !(find(missingEdges.begin(), missingEdges.end(), Edge(e.finish, e.start)) != missingEdges.end()))
-                    missingEdges.push_back(Edge(e.start, e.finish));
+            if(graph.matrix[id][i])
+                if (!used[i])
+                {
+                    AddEdge(id, i);
+                    dfs_stack.push(i);
+                    used[i] = true;
+                }
+                else
+                    result_graph.AddEdge(id, i);
         }
         // (Оптимизировать)
         // Если компонент связности несколько, то ищем следующую компоненту для добавления ребер
@@ -188,7 +167,7 @@ vector<Edge> Graph::GenerateSpanningTree(const Graph& graph) {
 
     //cout << "Spanning tree\n";
     //PrintAdjacencyMatrix();
-    return missingEdges;
+    return result_graph;
 }
 
 void Graph::PrintBipartiteComponents(const int n = 1) 
@@ -202,23 +181,22 @@ void Graph::PrintBipartiteComponents(const int n = 1)
     }
     //cout << "Graph\n";
     //PrintAdjacencyMatrix();
-    //cout << "\n";
     //Строим остовное дерево
-    Graph graph(vertecies.size());
-    Graph new_graph(vertecies.size());
-    vector<Edge> missingEdges = graph.GenerateSpanningTree(*this);
+    Graph graph(matrix.size());
+    Graph new_graph(matrix.size());
+    new_graph = graph.GenerateSpanningTree(*this);
     //Добавляем по очереди не вошедшие ребра
-    while (!missingEdges.empty())
-    {
-        Edge edge = missingEdges.back();
-        missingEdges.pop_back();
-        graph.AddEdge(edge.start, edge.finish);
-        if (!graph.isBipartite()) 
+    for(int i = 0; i < matrix.size(); ++i)
+        for(int j = 0; j < matrix.size(); ++j)
         {
-            graph.DeleteLastEdge(edge.start);
-            new_graph.AddEdge(edge.start, edge.finish);
+            if (!new_graph.matrix[i][j])
+                continue;
+            graph.AddEdge(i, j);
+            if (!graph.isBipartite())
+                graph.DeleteEdge(i, j);
+            else
+                new_graph.DeleteEdge(i, j);
         }
-    }
     cout << "Bipartite component #" << n << "\n";
     graph.PrintAdjacencyMatrix();
     cout << "------------------------------------------\n";
@@ -227,24 +205,24 @@ void Graph::PrintBipartiteComponents(const int n = 1)
 
 bool Graph::isBipartite() const 
 {
-    vector<int> color(vertecies.size(), -1);
+    vector<int> color(matrix.size(), -1);
     stack<int> dfs_stack;
 
     dfs_stack.push(0);
     color[0] = 0;
     while (!dfs_stack.empty())
     {
-        int i = dfs_stack.top(); dfs_stack.pop();
-        const Vertex& v = vertecies[i];
-        for (Edge e : v.edges)
+        VertexId id = dfs_stack.top(); dfs_stack.pop();
+        for (int i = 0; i < matrix.size(); ++i)
         {
-            if (color[e.finish] == -1)
-            {
-                dfs_stack.push(e.finish);
-                color[e.finish] = !color[i];
-            }
-            else if (color[e.finish] == color[i])
-                return false;
+            if(matrix[id][i])
+                if (color[i] == -1)
+                {
+                    dfs_stack.push(i);
+                    color[i] = !color[id];
+                }
+                else if (color[i] == color[id])
+                    return false;
         }
         // (Оптимизировать)
         // Если компонент связности несколько, то ищем следующую компоненту для добавления ребер
