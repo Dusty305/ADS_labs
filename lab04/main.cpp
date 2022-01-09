@@ -14,8 +14,8 @@ int main() {
     //    {1, 1, 0, 0, 0}
     //};
     //Graph graph(matrix);
-    Graph graph;
-    graph.GenerateGraph(8);
+    Graph graph(8);
+    graph.GenerateGraph();
     graph.PrintAdjacencyMatrix();
     graph.PrintBipartiteComponents(1);
 

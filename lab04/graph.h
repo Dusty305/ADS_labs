@@ -17,19 +17,22 @@ struct Edge
     VertexId start;
     VertexId finish;
     Edge(int strt = -1, int fnsh = -1) : start(strt), finish(fnsh) { }
-    bool operator==(const Edge& edge) { return start == edge.start && finish == edge.finish; }
+    inline bool operator==(const Edge& edge) { return start == edge.start && finish == edge.finish; }
 };
 
 struct Vertex 
 {
     vector<Edge> edges;
     Vertex(int size = 0) { edges.reserve(size); }
-    bool HasEdge(int start, int finish)
+    bool DeleteEdge(VertexId start, VertexId finish)
     {
-        for (Edge e : edges)
-            if (e.start == start and e.finish == finish)
-                return true;
-        return false;
+        auto edge_it = find_if(edges.begin(), edges.end(), [&](const Edge& edge)
+            { return edge.finish == finish; }
+        );
+        if (edge_it == edges.end())
+            return false;    
+        edges.erase(edge_it);
+        return true;
     }
 };
 
@@ -41,7 +44,10 @@ private:
 
 public:
 
-    Graph() { srand(time(0)); }
+    Graph(size_t size = 0) 
+    { 
+        vertecies = vector<Vertex>(size, Vertex(size - 1));
+        srand(time(0)); }
 
     Graph(vector<Vertex> vec) : vertecies(vec) { srand(time(0)); }
 
@@ -50,8 +56,8 @@ public:
         vertecies = vector<Vertex>(adjMatrix.size(), Vertex(adjMatrix.size() - 1));
         for (int i = 0; i < adjMatrix.size(); ++i)
             for (int j = i + 1; j < adjMatrix.size(); ++j)
-                if (adjMatrix[i][j]) // TODO: move?
-                    AddEdge(Edge(i, j));
+                if (adjMatrix[i][j])
+                    AddEdge(i, j);
     }
 
     // ---------------------------------
@@ -63,12 +69,9 @@ public:
     const int GetVerteciesNumber() const { return vertecies.size(); }
 
     // TODO: Сделать inline?
-    bool IsValidVertexId(VertexId id) const
+    inline bool IsValidVertexId(VertexId id) const
     {
-        if (0 <= id && id < vertecies.size())
-            return true;
-        else
-            return false;
+        return 0 <= id && id < vertecies.size();
     }
 
     // TODO: Нужна ли проверка на правильность id?
@@ -93,44 +96,38 @@ public:
     // Edge related methods
     // ---------------------------------
 
-    // TODO: Исправить на VertexId? добавить метод find вместо собственного цикла?
-    bool HasEdge(const Edge& edge) const
+    bool HasEdge(const VertexId start, const VertexId finish) const
     {
-        for (Edge e : vertecies[edge.start].edges)
-            if (e.finish == edge.finish)
-                return true;
-        return false;
+        if (!IsValidVertexId(start) or !IsValidVertexId(finish))
+            throw "Invalid vertex id";
+        return find_if(vertecies[start].edges.begin(), vertecies[start].edges.end(), 
+            [&](const Edge& edge) { return finish == edge.finish; }) 
+            != vertecies[start].edges.end();
     }
 
     // TODO: Исправить на VertexId?
-    void AddEdge(const Edge& edge)
+    void AddEdge(const VertexId start, const VertexId finish)
     {
-        vertecies[edge.start].edges.push_back(Edge(edge.start, edge.finish));
-        vertecies[edge.finish].edges.push_back(Edge(edge.finish, edge.start));
+        vertecies[start].edges.push_back(Edge(start, finish));
+        vertecies[finish].edges.push_back(Edge(finish, start));
     }
 
     // TODO: зачем bool? есть ли получше способы удаления?
     bool DeleteEdge(VertexId i, VertexId j) 
     {
+        cout << "--------\n";
         if (!IsValidVertexId(i) or !IsValidVertexId(j))
             return false;
-        Vertex& v1 = vertecies[i];
-        for (auto it = v1.edges.begin(); it < v1.edges.end(); ++it)
-            if ((*it).finish == j)
-            {
-                v1.edges.erase(it);
-                break;
-            }
 
-        Vertex& v2 = vertecies[j];
-        for (auto it = v2.edges.begin(); it < v2.edges.end(); ++it)
-            if ((*it).finish == i)
-            {
-                v2.edges.erase(it);
-                break;
-            }
-
+        if(!vertecies[i].DeleteEdge(i, j))
+            return false;
+        vertecies[j].DeleteEdge(j, i);
         return true;
+    }
+
+    void DeleteLastEdge(VertexId id)
+    {
+        vertecies[id].edges.pop_back();
     }
 
     // ---------------------------------
@@ -151,20 +148,17 @@ public:
         }
     }
 
-    void GenerateGraph(int n)
+    void GenerateGraph()
     {
-        vertecies = vector<Vertex>(n, Vertex(n - 1));
+        const int n = vertecies.size();
         const int edges_number = rand() % (n * (n - 1) / 2) + 1;
 
         for (int k = 0; k < edges_number; ++k)
         {
-            int i = rand() % n,
-                j = rand() % n;
-            if (i != j and !vertecies[i].HasEdge(i, j))
-            {
-                vertecies[i].edges.push_back(Edge(i, j));
-                vertecies[j].edges.push_back(Edge(j, i));
-            }
+            VertexId i = rand() % n,
+                     j = rand() % n;
+            if (i != j and !HasEdge(i, j))
+                AddEdge(i, j);
             else
                 --k;
         }
@@ -179,9 +173,9 @@ public:
 // Возвращает недобавленные ребра
 vector<Edge> Graph::GenerateSpanningTree(const Graph& graph) {
     const int nOfV = graph.GetVerteciesNumber();
-    vertecies = vector<Vertex>(nOfV, Vertex(nOfV - 1));
+
     stack<VertexId> dfs_stack;
-    vector<bool> used(graph.GetVerteciesNumber(), false);
+    vector<bool> used(nOfV, false);
     vector<Edge> missingEdges;
     missingEdges.reserve(nOfV * (nOfV - 1) / 2);
 
@@ -194,18 +188,14 @@ vector<Edge> Graph::GenerateSpanningTree(const Graph& graph) {
 
         for (Edge e : v.edges)
         {
-            Edge new_edge = Edge(e.start, e.finish);
-            Edge new_edge_back = Edge(e.finish, e.start);
             if (!used[e.finish])
             {
-                vertecies[id].edges.push_back(new_edge);
-                vertecies[e.finish].edges.push_back(new_edge_back);
+                AddEdge(e.start, e.finish);
                 dfs_stack.push(e.finish);
                 used[e.finish] = true;
             }
-            else // Если не рассматривается обратное ребро уже добавленного ребра
-                if (!HasEdge(new_edge_back) and !(find(missingEdges.begin(), missingEdges.end(), new_edge_back) != missingEdges.end()))
-                    missingEdges.push_back(new_edge);
+            else if (!HasEdge(e.finish, e.start) and !(find(missingEdges.begin(), missingEdges.end(), Edge(e.finish, e.start)) != missingEdges.end()))
+                    missingEdges.push_back(Edge(e.start, e.finish));
         }
         // (Оптимизировать)
         // Если компонент связности несколько, то ищем следующую компоненту для добавления ребер
@@ -230,27 +220,24 @@ void Graph::PrintBipartiteComponents(const int n) {
         return;
     }
     //Строим остовное дерево
-    Graph graph;
-    Graph new_graph;
+    Graph graph(vertecies.size());
+    Graph new_graph(vertecies.size());
     vector<Edge> missingEdges = graph.GenerateSpanningTree(*this);
-    vector<Vertex> newGraphVertecies = vector<Vertex>(GetVerteciesNumber(), Vertex(GetVerteciesNumber() - 1));
     //Добавляем по очереди не вошедшие ребра
     while (!missingEdges.empty())
     {
         Edge edge = missingEdges.back();
         missingEdges.pop_back();
-        graph.AddEdge(edge);
+        graph.AddEdge(edge.start, edge.finish);
         if (!graph.isBipartite()) 
         {
-            graph.DeleteEdge(edge.start, edge.finish);
-            newGraphVertecies[edge.start].edges.push_back(Edge(edge.start, edge.finish));
-            newGraphVertecies[edge.finish].edges.push_back(Edge(edge.finish, edge.start));
+            graph.DeleteLastEdge(edge.start);
+            new_graph.AddEdge(edge.start, edge.finish);
         }
     }
     cout << "Bipartite component #" << n << "\n";
     graph.PrintAdjacencyMatrix();
 
-    new_graph = Graph(newGraphVertecies);
     new_graph.PrintBipartiteComponents(n + 1);
 }
 
