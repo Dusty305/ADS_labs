@@ -1,12 +1,7 @@
 #include <iostream>
 #include <algorithm>
-#include <cstring>
-#include <cstdlib>
-#include <time.h>
-#include <cstdio>
 #include <vector>
 #include <stack>
-#include <map>
 
 using namespace std;
 
@@ -16,7 +11,7 @@ class Graph
 private:
     typedef int VertexId;
     vector<vector<bool>> matrix; // triangle adjecency matrix 
-    int power; // number of vertecies
+    int power;                   // number of vertecies
 public:
 
     Graph(size_t size = 0) 
