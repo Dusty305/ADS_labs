@@ -5,7 +5,6 @@
 
 using namespace std;
 
-
 class Graph 
 {
 private:
@@ -37,6 +36,7 @@ public:
             swap(start, finish);
         return make_pair(start, finish - start);
     }
+
     void AddEdge(VertexId start, VertexId finish) 
     {
         pair<VertexId, VertexId> edge = GetValidEdgeId(start, finish);
@@ -99,15 +99,16 @@ Graph Graph::GenerateSpanningTree(const Graph& graph) {
         
         for (int i = 0; i < power; ++i)
         {
-            if(graph.GetEdge(id, i))
-                if (!used[i])
-                {
-                    AddEdge(id, i);
-                    dfs_stack.push(i);
-                    used[i] = true;
-                }
-                else
-                    result_graph.AddEdge(id, i);
+            if (!graph.GetEdge(id, i))
+                continue;
+            if (!used[i])
+            {
+                AddEdge(id, i);
+                dfs_stack.push(i);
+                used[i] = true;
+            }
+            else
+                result_graph.AddEdge(id, i);
         }
 
         // Will work only if there is a number of 
